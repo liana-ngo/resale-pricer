@@ -157,6 +157,9 @@ print(benchmarks[[
     "price_median", "sell_through"
 ]].sort_values("days_median").to_string(index=False))
 
+benchmarks.sort_values("days_median").to_csv("category_benchmarks.csv", index=False)
+print("saved category_benchmarks.csv")
+
 
 # ── Cell 6: Charts ────────────────────────────────────────────────────────────
 
@@ -295,6 +298,12 @@ if not active_df.empty:
     print(alerts[[
         "title", "action", "listed_price", "suggested_price", "days_active"
     ]].to_string(index=False))
+
+    alerts[[
+        "title", "category", "action", "listed_price",
+        "suggested_price", "days_active", "reason"
+    ]].to_csv("reprice_alerts.csv", index=False)
+    print("saved reprice_alerts.csv")
 else:
     print("add active listings to your CSV to see reprice alerts")
 
