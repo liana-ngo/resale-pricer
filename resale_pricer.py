@@ -14,7 +14,7 @@
 #     algorithmically. A stale listing needs a relist to reset visibility,
 #     not just a price drop.
 #
-# Data: 177 sold listings from my own shop, Jan 2025 – Mar 2026
+# Data: 564 sold listings from my own shop, Jul 2020 – Mar 2026
 
 
 # ── Cell 1: Imports ───────────────────────────────────────────────────────────
@@ -36,7 +36,7 @@ print("libraries loaded")
 # ── Cell 2: Config ────────────────────────────────────────────────────────────
 
 PLATFORM = "depop"
-FILE_PATH = "data/sample/depop_listings.csv"  # swap in your own CSV path
+FILE_PATH = "data/depop_full_alltime.csv"  # swap in your own CSV path
 
 # Thresholds calibrated from my own 177-listing sold history.
 # Depop slow threshold: 21 days — that's roughly where I noticed listings
@@ -53,7 +53,7 @@ PLATFORM_CONFIG = {
         "slow_days": 21,
         "fast_days": 7,
         "drop_pct": 0.10,
-        "notes": "59% of listings sell within 7 days — past 21d is a real stall"
+        "notes": "48% of listings sell within 7 days — past 21d is a real stall"
     },
     "grailed": {
         "slow_days": 30,
@@ -105,7 +105,7 @@ print(df[["title", "category", "listed_price", "status", "days_to_sell"]].head(8
 
 
 # ── Cell 4: Top-line summary ──────────────────────────────────────────────────
-# Real numbers from my shop Jan 2025 – Mar 2026
+# Real numbers from my shop Jul 2020 – Mar 2026
 
 total = len(df)
 n_sold = len(sold_df)
@@ -114,7 +114,7 @@ median_days = sold_df["days_to_sell"].median()
 mean_days = sold_df["days_to_sell"].mean()
 
 print(f"\n{'='*45}")
-print(f"  DEPOP SHOP SUMMARY")
+print(f"  DEPOP SHOP SUMMARY (Jul 2020 – Mar 2026)")
 print(f"{'='*45}")
 print(f"  Total sold items:       {n_sold}")
 print(f"  Sell-through rate:      {sell_through:.0%}")
@@ -128,14 +128,14 @@ print(f"{'='*45}")
 
 # ── Cell 5: Category benchmarks ───────────────────────────────────────────────
 # Core reference table. I use category-level comps rather than brand-level
-# because with ~177 sold items, filtering by brand produces comp sets that
-# are too small for the percentiles to be reliable. "Other" brand alone is
-# 78 of 177 listings. Category is coarser but more statistically sound here.
+# because with ~564 sold items across many brands, filtering by brand produces
+# comp sets that are too small for the percentiles to be reliable.
+# Category is coarser but more statistically sound at this scale.
 #
-# Real category medians from my data:
-#   accessories: 2.5d  |  bottoms: 4d  |  footwear: 3d
-#   swimwear: 6d       |  tops: 6d     |  dresses: 10d
-#   outerwear: 15.5d   |  other: 5d
+# Full-history category medians:
+#   accessories: 3d   |  swimwear: 6d   |  footwear: 7d
+#   bottoms: 7d       |  tops: 10d      |  outerwear: 16d
+#   dresses: 18d
 
 benchmarks = sold_df.groupby("category").agg(
     n_sold=("listing_id", "count"),
@@ -161,7 +161,7 @@ print(benchmarks[[
 # ── Cell 6: Charts ────────────────────────────────────────────────────────────
 
 fig, axes = plt.subplots(1, 2, figsize=(13, 5))
-fig.suptitle("Depop shop — category performance (Jan 2025 – Mar 2026)",
+fig.suptitle("Depop shop — category performance (Jul 2020 – Mar 2026)",
              fontsize=12, y=1.01)
 
 # color by speed vs my actual thresholds
@@ -300,8 +300,10 @@ else:
 
 
 # ── Cell 9: Slow listings deep dive ──────────────────────────────────────────
-# Look at the 28 listings that stalled 21+ days in my sold history.
-# These are the cases the tool is built to prevent going forward.
+# Look at listings that stalled 21+ days in the sold history.
+# Before applying repricing logic consistently (pre-July 2024), 39% of
+# listings stalled. After, that dropped to 15%. These are the cases
+# the tool is built to catch.
 
 slow = sold_df[sold_df["days_to_sell"] >= 21].copy()
 print(f"\nSLOW LISTINGS ANALYSIS (21+ days to sell)")
@@ -321,7 +323,8 @@ print(slow.nlargest(8, "days_to_sell")[[
 
 
 # ── Cell 10: Sales velocity over time ─────────────────────────────────────────
-# Monthly sales volume — shows the Q3 2025 peak clearly
+# Monthly sales volume — shows the Jul 2024 inflection when repricing
+# logic was applied consistently. Stall rate drops visibly from that point.
 
 sold_df_copy = sold_df.copy()
 sold_df_copy["month"] = pd.to_datetime(sold_df_copy["date_sold"]).dt.to_period("M")
