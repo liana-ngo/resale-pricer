@@ -29,13 +29,11 @@ Before writing any code I talked to 4 other active sellers. The main thing I lea
 
 **Sales velocity chart** — monthly sales volume vs median days-to-sell over time.
 
-See [sample output](screenshots/) for charts and alerts generated from real shop data (177 sold listings, Jan 2025 – Mar 2026).
-
 ---
 
 ## How comparable listings are defined
 
-A comp is any sold listing in the same `category`. I considered filtering by brand and condition but with a typical seller's inventory size, over-filtering produces comp sets too small for the percentiles to be meaningful. In my own data, 78 of 177 sold listings were tagged "Other" brand — brand-level filtering would have been useless. Category-level is coarser but more statistically reliable at this scale.
+A comp is any sold listing in the same `category`. I considered filtering by brand and condition but with a typical seller's inventory size, over-filtering produces comp sets too small for the percentiles to be meaningful. Category-level is coarser but more statistically reliable at this scale.
 
 ---
 
@@ -52,39 +50,57 @@ Trigger: `days_active >= 2x slow_threshold AND price above median`.
 ## Platform calibration
 
 **Depop** — slow threshold: 21 days, suggested drop: 10%.
-Based on my own 177-listing sold history: 59% of listings sold within 7 days, 77% within 14. Past 21 days is a genuine stall, not just slow movement.
+Calibrated from my own sold history: 48% of listings sold within 7 days. Past 21 days is a genuine stall, not just slow movement. After applying the repricing logic consistently, stall rate dropped from 39% to 15%.
 
-**Grailed** — slow threshold: 30 days, suggested drop: 8%.
-Smaller, more deliberate buyer pool. Longer sell cycles are normal even when priced correctly. Brand and condition anchor price more strongly than on Depop.
-
-**Poshmark** — slow threshold: 21 days, suggested drop: 12%.
-Offer culture compresses final sale price roughly 10–15% below listed. The higher drop suggestion accounts for this — you need to list with room to accept an offer.
+The config values for Grailed and Poshmark are set based on how those platforms work (see `PLATFORM_CONFIG` in both files), but I only have Depop data. The thresholds are reasonable starting points — treat them as priors to tune once you have your own history on those platforms.
 
 ---
 
-## My shop data (Jan 2025 – Mar 2026)
+## Roadmap
 
-177 sold listings across tops, bottoms, dresses, accessories, swimwear, footwear, and outerwear.
+- Grailed and Poshmark data to validate and refine those platform configs
+- Price retention tracking (requires manually logging original listed price alongside sold price, since Depop's export doesn't include it)
+- Cross-platform comparison once multi-platform data exists
+
+---
+
+## My shop data (Jul 2020 – Mar 2026)
+
+564 sold listings across tops, bottoms, dresses, accessories, swimwear, footwear, and outerwear.
 
 | Category | Median days to sell | Median sold price |
 |---|---|---|
-| Accessories | 2.5 days | $22 |
-| Footwear | 3 days | $42 |
-| Bottoms | 4 days | $11 |
-| Tops | 6 days | $6 |
+| Accessories | 3 days | $11 |
 | Swimwear | 6 days | $5 |
-| Dresses | 10 days | $8 |
-| Outerwear | 15.5 days | $35 |
+| Footwear | 7 days | $22 |
+| Bottoms | 7 days | $18 |
+| Tops | 10 days | $13 |
+| Outerwear | 16 days | $24 |
+| Dresses | 18 days | $16 |
 
-Overall: median 5 days to sell, 59% of listings sold within 7 days, 16% stalled past 21 days.
+Overall: median 8 days to sell, 48% of listings sold within 7 days, 30% stalled past 21 days before the repricing logic was applied consistently.
 
-The 28 listings that stalled 21+ days are the cases this tool is built to catch going forward.
+---
+
+## Before/after
+
+I started applying the repricing logic consistently around July 2024. The signal in the data is clear: before that point, stall rates were high and erratic. The shift shows up in both the stall rate and fast-sell rate.
+
+| Metric | Before (Jul 2020 – Jun 2024) | After (Jul 2024 – present) |
+|---|---|---|
+| Items sold | 359 | 205 |
+| Median days to sell | 11 days | 5 days |
+| Sold within 7 days | 43% | 59% |
+| Stalled 21+ days | 39% | 15% |
+| Stuck 42+ days (relist territory) | 29% | 7% |
+
+Note: the volume increase from 2024 onward also reflects listing more actively, not just better pricing. The days-to-sell and stall rate changes are the cleaner signal.
 
 ---
 
 ## Limitations
 
-Depop's sales export gives sold price but not original listed price. This means price retention (listed → sold) can't be calculated from the export alone — you'd need to manually log original listed prices. The days-to-sell analysis and category benchmarks are fully functional. Price percentile for active listings compares against sold prices, which is still a useful signal.
+Depop's sales export gives sold price but not original listed price. This means price retention (listed to sold) can't be calculated from the export alone — you'd need to manually log original listed prices. The days-to-sell analysis and category benchmarks are fully functional. Price percentile for active listings compares against sold prices, which is still a useful signal.
 
 ---
 
@@ -107,7 +123,11 @@ platform, listing_id, title, category, brand, condition,
 listed_price, sold_price, date_listed, date_sold, status
 ```
 
-Export your sales history from your platform's seller dashboard and format to match. Dates should be `YYYY-MM-DD`. Status is `sold` or `active`. Sample data for all three platforms is in `data/sample/`.
+Export your sales history from your platform's seller dashboard and format to match. Dates should be `YYYY-MM-DD`. Status is `sold` or `active`.
+
+Two data files are included in this repo:
+- `data/depop_full_alltime.csv` — complete selling history (Jul 2020 – Mar 2026, 583 listings). Use this to run the full analysis including the before/after comparison.
+- `data/sample/depop_listings.csv` — smaller slice (196 listings, Jan 2025 onward) if you want a faster test run or a cleaner starting point to understand the schema.
 
 ---
 
@@ -116,7 +136,7 @@ Export your sales history from your platform's seller dashboard and format to ma
 ```python
 # Set these two lines in Cell 2, then run all cells top to bottom
 PLATFORM = "depop"   # or "grailed" / "poshmark"
-FILE_PATH = "data/sample/depop_listings.csv"
+FILE_PATH = "data/depop_full_alltime.csv"  # or "data/sample/depop_listings.csv" for the smaller slice
 ```
 
 Add your current active listings to the CSV with `status = active` to get reprice alerts.
@@ -125,6 +145,6 @@ Add your current active listings to the CSV with `status = active` to get repric
 
 ## Versions
 
-**v1** — revenue-focused. Flagged listings priced below category median (wrong frame).  
-**v2** — switched core output to days-to-sell after user interviews showed that's what sellers actually optimize for.  
+**v1** — revenue-focused. Flagged listings priced below category median (wrong frame).
+**v2** — switched core output to days-to-sell after user interviews showed that's what sellers actually optimize for.
 **v3** — split reprice and relist into separate actions after finding that relisting outperforms price drops on stale listings.
