@@ -125,9 +125,7 @@ listed_price, sold_price, date_listed, date_sold, status
 
 Export your sales history from your platform's seller dashboard and format to match. Dates should be `YYYY-MM-DD`. Status is `sold` or `active`.
 
-Two data files are included in this repo:
-- `data/depop_full_alltime.csv` — complete selling history (Jul 2020 – Mar 2026, 583 listings). Use this to run the full analysis including the before/after comparison.
-- `data/sample/depop_listings.csv` — smaller slice (196 listings, Jan 2025 onward) if you want a faster test run or a cleaner starting point to understand the schema.
+Data is in `data/depop_full_alltime.csv` — complete selling history (Jul 2020 – Mar 2026, 583 listings). To use with your own shop, export your sales history and format to match.
 
 ---
 
@@ -136,7 +134,7 @@ Two data files are included in this repo:
 ```python
 # Set these two lines in Cell 2, then run all cells top to bottom
 PLATFORM = "depop"   # or "grailed" / "poshmark"
-FILE_PATH = "data/depop_full_alltime.csv"  # or "data/sample/depop_listings.csv" for the smaller slice
+FILE_PATH = "data/depop_full_alltime.csv" 
 ```
 
 Add your current active listings to the CSV with `status = active` to get reprice alerts.
