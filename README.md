@@ -29,6 +29,8 @@ Before writing any code I talked to 4 other active sellers. The main thing I lea
 
 **Sales velocity chart** — monthly sales volume vs median days-to-sell over time.
 
+See [sample output](screenshots/) for charts and alerts generated from real shop data (177 sold listings, Jan 2025 – Mar 2026).
+
 ---
 
 ## How comparable listings are defined
